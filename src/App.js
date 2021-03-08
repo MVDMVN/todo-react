@@ -1,4 +1,5 @@
 import React from "react";
+import uuid from "react-uuid";
 import "./App.scss";
 import Tasks from "./components/Tasks";
 
@@ -30,7 +31,7 @@ class App extends React.Component {
         tasksItems: [
           ...this.state.tasksItems,
           {
-            id: Date.now(),
+            id: uuid(),
             text: this.state.inputValue,
             isDone: false,
           },
@@ -49,14 +50,12 @@ class App extends React.Component {
         });
       }
     });
-    console.log(this.state.tasksItems);
   };
 
   onDeleteTask = (id) => {
     this.setState({
       tasksItems: [...this.state.tasksItems.filter((item) => item.id !== id)],
     });
-    console.log(this.state.tasksItems);
   };
 
   render() {
