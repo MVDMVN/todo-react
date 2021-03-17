@@ -2,17 +2,14 @@ import React from "react";
 import uuid from "react-uuid";
 import "./App.scss";
 import Tasks from "./components/Tasks";
+import TextInput from "./components/TextInput";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      tasksItems: [],
-      inputValue: "",
+      tasksItems: JSON.parse(localStorage.getItem("tasksItems") || "[]"),
     };
-    this.state.tasksItems = JSON.parse(
-      localStorage.getItem("tasksItems") || "[]",
-    );
   }
 
   componentDidUpdate(prevState) {
@@ -21,30 +18,24 @@ class App extends React.Component {
     }
   }
 
-  inputTaskTextHandler = (event) => {
-    this.setState({ inputValue: event.target.value });
+  onAddTask = (text) => {
+    this.setState({
+      tasksItems: [
+        ...this.state.tasksItems,
+        {
+          id: uuid(),
+          text,
+          isDone: false,
+          isEditable: false,
+        },
+      ],
+    });
   };
 
-  keyPressedHandler = (event) => {
-    if (event.key === "Enter" && this.state.inputValue.trim() !== "") {
-      this.setState({
-        tasksItems: [
-          ...this.state.tasksItems,
-          {
-            id: uuid(),
-            text: this.state.inputValue,
-            isDone: false,
-          },
-        ],
-      });
-      this.setState({ inputValue: "" });
-    }
-  };
-
-  onDoneTask = (id) => {
-    this.state.tasksItems.forEach((item) => {
-      if (item.id === id) {
-        item.isDone = !item.isDone;
+  onEditTaskOnDoubleClick = (id) => () => {
+    this.state.tasksItems.forEach((task) => {
+      if (task.id === id) {
+        task.isEditable = !task.isEditable;
         this.setState({
           tasksItems: [...this.state.tasksItems],
         });
@@ -52,9 +43,34 @@ class App extends React.Component {
     });
   };
 
+  itemInputChangeText = (id) => (text) => {
+    this.state.tasksItems.forEach((task) => {
+      if (task.id === id) {
+        task.text = text;
+        task.isEditable = !task.isEditable;
+        this.setState({
+          tasksItems: [...this.state.tasksItems],
+        });
+      }
+    });
+  };
+
+  onDoneTask = (id) => {
+    this.setState({
+      tasksItems: [
+        ...this.state.tasksItems.map((task) => {
+          if (task.id === id) {
+            task.isDone = !task.isDone;
+          }
+          return task;
+        }),
+      ],
+    });
+  };
+
   onDeleteTask = (id) => {
     this.setState({
-      tasksItems: [...this.state.tasksItems.filter((item) => item.id !== id)],
+      tasksItems: [...this.state.tasksItems.filter((task) => task.id !== id)],
     });
   };
 
@@ -62,13 +78,10 @@ class App extends React.Component {
     return (
       <div className="todo">
         <h1 className="todo__title">Todo List</h1>
-        <input
+        <TextInput
           className="todo__input"
-          value={this.state.inputValue}
-          onChange={this.inputTaskTextHandler}
-          onKeyDown={this.keyPressedHandler}
-          type="text"
           placeholder="Task name"
+          onAddTask={this.onAddTask}
         />
         <div className="todo__tasks">
           <p className="tasks__title">
@@ -78,6 +91,8 @@ class App extends React.Component {
             tasksItems={this.state.tasksItems}
             onDeleteTask={this.onDeleteTask}
             onDoneTask={this.onDoneTask}
+            onEditTaskOnDoubleClick={this.onEditTaskOnDoubleClick}
+            itemInputChangeText={this.itemInputChangeText}
           />
         </div>
       </div>
